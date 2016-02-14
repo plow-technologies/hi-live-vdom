@@ -7,35 +7,118 @@ import           Development.Shake.FilePath
 import           Development.Shake.Util
 
 
--- main build
-main :: IO ()
-main = (shakeArgs shakeOptions{shakeFiles="_build", shakeVerbosity=Diagnostic}) execute
 
+-- default build directory
+buildDir = "_build"
+
+
+-- main build
+main :: IO () -- , shakeVerbosity=Diagnostic
+main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
   where
    -- Build Target files and directories
    execute = wants >> rules
-   wants = want [ liveVdom
-                , packageExecutablePath
+   wants = want ([ packageExecutablePath
                 , packageExecutableFile
-                , sandbox ]
-   liveVdom = "live-vdom"
+                , sandbox ] ++ (fmap (buildDir </>)  subModules))
+   subModules = [stmNotify
+               , valentine
+               , ffiQQ
+               , ghcjsVdom
+               , liveVdom]
+
+
+   stmNotify = "stm-notify"
+   ffiQQ = "ghcjs-ffiqq"
+   ghcjsVdom = "ghcjs-vdom"
    sandbox = ".cabal-sandbox"
-   packageExecutablePath  = "dist"</>"build" </>"$packageName"
+   valentine = "valentine"
+   liveVdom = "live-vdom"
+   packageExecutablePath  = "dist"</>"dist-sandbox-*"
    packageExecutableFile  =  "dist"</>"build" </>"$packageName"  </> "$packageName"
 
 
    -- Rules
-   rules = staticRule <> packageExecutablePathRule <> packageExecutableFileRule <> sandboxRule
-   staticRule = static %> \out -> do
-     () <- cmd "git submodule add https://github.com/plow-technologies/onping-static.git ./static"
-     cmd Shell (Cwd (takeDirectory1 out)) "bower install"
-   packageExecutablePathRule = packageExecutablePath %> \out -> do
+   rules =  stmNotifyRule <>
+            valentineRule <>
+            liveVdomRule <>
+            packageExecutablePathRule <>
+            packageExecutableFileRule <>
+            sandboxRule <>
+            ffiQQRule <>
+            ghcjsVdomRule <>
+            cleanarg
+
+
+   stmNotifyRule = buildDir </> stmNotify %> \out -> do
      need [sandbox]
+     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/stm-notify"
+     cmd "cabal sandbox add-source" [buildDir </> stmNotify]
+
+
+
+   valentineRule = buildDir </> valentine %> \out -> do
+     need [sandbox]
+     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/valentine"
+     cmd "cabal sandbox add-source" [buildDir </> valentine]
+
+
+
+   liveVdomRule = buildDir </> liveVdom %> \out -> do
+     need [sandbox]
+     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/live-vdom"
+     cmd "cabal sandbox add-source" [buildDir </> liveVdom]
+
+
+
+
+   ffiQQRule = buildDir </> ffiQQ %> \out -> do
+     need [sandbox]
+     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/ghcjs/ghcjs-ffiqq.git"
+     cmd "cabal sandbox add-source" [buildDir </> ffiQQ]
+
+
+
+   ghcjsVdomRule = buildDir </> ghcjsVdom %> \out -> do
+     need [sandbox]
+     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/ghcjs-vdom.git"
+     cmd "cabal sandbox add-source" [buildDir </> ghcjsVdom]
+
+
+   packageExecutablePathRule = packageExecutablePath %> \out -> do
+     need [sandbox
+          ,buildDir </> stmNotify
+          ,buildDir </> valentine
+          ,buildDir </> liveVdom
+          ,buildDir </> ffiQQ
+          ,buildDir </> ghcjsVdom]
+
      () <- cmd "cabal update"
-     cmd "cabal install --ghcjs"
+     cmd "cabal install --ghcjs --reorder-goals"
+
+
+
+
    packageExecutableFileRule = packageExecutableFile %> \out -> do
-     need [sandbox,packageExecutablePath]
+     need [sandbox
+          ,packageExecutablePath]
+
      () <- cmd "cabal update"
+     () <- cmd "cabal configure --ghcjs"
      cmd "cabal build"
+
+
+
    sandboxRule = sandbox %> \_ -> cmd "cabal sandbox init"
 
+-- Cleanup --------------------------------------------------
+   cleanarg = phony "clean" $$ do
+       putNormal "cleaning files in build"
+       putNormal "removing submodules ..."
+       (cmd "git submodule deinit -f " ) `traverse` ((buildDir </> ) `fmap` subModules)   :: Action [()]
+       (cmd "git rm -f") `traverse` ((buildDir </> )<$>subModules)   :: Action [()]
+       () <- cmd "rm -rf" [".git" </> "modules" </> buildDir]
+       () <- cmd "rm -rf" [buildDir]
+       () <- cmd "cabal clean"
+       () <- cmd "cabal sandbox delete"
+       return ()
