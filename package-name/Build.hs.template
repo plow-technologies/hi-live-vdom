@@ -18,8 +18,7 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
   where
    -- Build Target files and directories
    execute = wants >> rules
-   wants = want ([ packageExecutablePath
-                , packageExecutableFile
+   wants = want ([packageExecutableFile
                 , sandbox ] ++ (fmap (buildDir </>)  subModules))
    subModules = [stmNotify
                , valentine
@@ -34,7 +33,6 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
    sandbox = ".cabal-sandbox"
    valentine = "valentine"
    liveVdom = "live-vdom"
-   packageExecutablePath  = "dist"</>"dist-sandbox-*"
    packageExecutableFile  =  "dist"</>"build" </>"$packageName"  </> "$packageName"
 
 
@@ -42,7 +40,6 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
    rules =  stmNotifyRule <>
             valentineRule <>
             liveVdomRule <>
-            packageExecutablePathRule <>
             packageExecutableFileRule <>
             sandboxRule <>
             ffiQQRule <>
@@ -85,25 +82,15 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
      cmd "cabal sandbox add-source" [buildDir </> ghcjsVdom]
 
 
-   packageExecutablePathRule = packageExecutablePath %> \out -> do
+   packageExecutableFileRule = packageExecutableFile %> \out -> do
      need [sandbox
           ,buildDir </> stmNotify
           ,buildDir </> valentine
           ,buildDir </> liveVdom
           ,buildDir </> ffiQQ
           ,buildDir </> ghcjsVdom]
-
      () <- cmd "cabal update"
-     cmd "cabal install --ghcjs --reorder-goals"
-
-
-
-
-   packageExecutableFileRule = packageExecutableFile %> \out -> do
-     need [sandbox
-          ,packageExecutablePath]
-
-     () <- cmd "cabal update"
+     () <- cmd "cabal install --ghcjs --reorder-goals"
      () <- cmd "cabal configure --ghcjs"
      cmd "cabal build"
 
