@@ -33,7 +33,7 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
    sandbox = ".cabal-sandbox"
    valentine = "valentine"
    liveVdom = "live-vdom"
-   packageExecutableFile  =  "dist"</>"build" </>"$packageName"  </> "$packageName"
+   packageExecutableFile  =  "dist"</>"build" </>"$packageName"  </> "$packageName" <.> "jsexe" </> "all.js"
 
 
    -- Rules
