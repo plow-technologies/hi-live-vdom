@@ -103,7 +103,7 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
        putNormal "cleaning files in build"
        putNormal "removing submodules ..."
        (cmd "git submodule deinit -f " ) `traverse` ((buildDir </> ) `fmap` subModules)   :: Action [()]
-       (cmd "git rm -f") `traverse` ((buildDir </> )<$>subModules)   :: Action [()]
+       (cmd "git rm -f") `traverse` ((buildDir </> ) `fmap` subModules)   :: Action [()]
        () <- cmd "rm -rf" [".git" </> "modules" </> buildDir]
        () <- cmd "rm -rf" [buildDir]
        () <- cmd "cabal clean"
