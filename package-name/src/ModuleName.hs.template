@@ -1,3 +1,17 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
+
 module $moduleName where
 
 import $moduleName.Internal
+
+import           Valentine
+hello = [valentine|
+<div>
+  <section id="hello-app">
+    <header id="header">
+     <h1>
+         Hello World!
+
+
+|]
