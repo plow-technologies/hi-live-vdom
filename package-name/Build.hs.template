@@ -35,66 +35,63 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
    liveVdom = "live-vdom"
    packageExecutableFile  =  "dist"</>"build" </>"$packageName"  </> "$packageName" <.> "jsexe" </> "all.js"
 
-
-   -- Rules
    rules =  stmNotifyRule <>
             valentineRule <>
             liveVdomRule <>
             packageExecutableFileRule <>
+            ghcjsServantClientRule <>
             sandboxRule <>
             ffiQQRule <>
             ghcjsVdomRule <>
             cleanarg
-
-
-   stmNotifyRule = buildDir </> stmNotify %> \out -> do
+   ghcjsServantClientRule = buildDir </> ghcjsServantClient %> \out -> do
      need [sandbox]
-     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/stm-notify"
-     cmd "cabal sandbox add-source" [buildDir </> stmNotify]
-
-
-
-   valentineRule = buildDir </> valentine %> \out -> do
+     gitAddOneTime (buildDir </> ghcjsServantClient) gitAdd sandboxAdd
+             where
+               gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/ghcjs-servant-client.git"
+               sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsServantClient]
+   stmNotifyRule = (buildDir </> stmNotify) %> \out -> do
      need [sandbox]
-     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/valentine"
-     cmd "cabal sandbox add-source" [buildDir </> valentine]
-
-
-
-   liveVdomRule = buildDir </> liveVdom %> \out -> do
+     gitAddOneTime (buildDir </> stmNotify) gitAdd sandboxAdd
+       where
+         gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/stm-notify"
+         sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> stmNotify]
+   valentineRule = (buildDir </> valentine) %> \out -> do
+     need [sandbox]     
+     gitAddOneTime (buildDir </> valentine) gitAdd sandboxAdd
+       where
+         gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/valentine"
+         sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> valentine]
+   liveVdomRule = (buildDir </> liveVdom) %> \out -> do
      need [sandbox]
-     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/live-vdom"
-     cmd "cabal sandbox add-source" [buildDir </> liveVdom]
-
-
-
-
-   ffiQQRule = buildDir </> ffiQQ %> \out -> do
+     gitAddOneTime (buildDir </> liveVdom) gitAdd sandboxAdd
+       where
+        gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/live-vdom"
+        sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> liveVdom]
+   ffiQQRule = (buildDir </> ffiQQ) %> \out -> do
      need [sandbox]
-     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/ghcjs/ghcjs-ffiqq.git"
-     cmd "cabal sandbox add-source" [buildDir </> ffiQQ]
-
-
-
-   ghcjsVdomRule = buildDir </> ghcjsVdom %> \out -> do
+     gitAddOneTime (buildDir </> ffiQQ) gitAdd sandboxAdd
+       where
+         gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/ghcjs/ghcjs-ffiqq.git"
+         sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ffiQQ]
+   ghcjsVdomRule = (buildDir </> ghcjsVdom) %> \out -> do
      need [sandbox]
-     () <- cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/ghcjs-vdom.git"
-     cmd "cabal sandbox add-source" [buildDir </> ghcjsVdom]
-
-
+     gitAddOneTime (buildDir </> ghcjsVdom) gitAdd sandboxAdd
+         where
+           gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/ghcjs-vdom.git"
+           sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsVdom]
    packageExecutableFileRule = packageExecutableFile %> \out -> do
-     need [sandbox
-          ,buildDir </> stmNotify
-          ,buildDir </> valentine
-          ,buildDir </> liveVdom
-          ,buildDir </> ffiQQ
-          ,buildDir </> ghcjsVdom]
-     () <- cmd "cabal update"
-     () <- cmd "cabal install --ghcjs --reorder-goals"
-     () <- cmd "cabal configure --ghcjs"
-     cmd "cabal build"
-
-
+        need [sandbox
+             ,buildDir </> ghcjsServantClient
+             ,buildDir </> stmNotify
+             ,buildDir </> valentine
+             ,buildDir </> liveVdom
+             ,buildDir </> ffiQQ
+             ,buildDir </> ghcjsVdom]
+        () <- cmd "cabal update"
+        () <- cmd "cabal install --ghcjs --reorder-goals"
+        () <- cmd "cabal configure --ghcjs"
+        cmd "cabal build"
 
    sandboxRule = sandbox %> \_ -> cmd "cabal sandbox init"
 
@@ -109,3 +106,13 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
        () <- cmd "cabal clean"
        () <- cmd "cabal sandbox delete"
        return ()
+
+
+gitAddOneTime :: FilePath -> Action ()  -> Action ()  -> Action ()
+gitAddOneTime fp gitAdd sandboxAdd = do
+    rslt <- (doesDirectoryExist fp) 
+    if rslt
+       then sandboxAdd
+       else do
+    () <- gitAdd
+    sandboxAdd
