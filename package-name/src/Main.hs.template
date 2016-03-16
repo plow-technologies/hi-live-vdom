@@ -1,4 +1,4 @@
-
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 import           Control.Concurrent.STM.Notify
 import qualified Data.Sequence                 as S
@@ -10,4 +10,6 @@ main = do
 --  mapM_ addCss cssFiles
 --   mapM_ addJs jsFiles
   container <- createContainer
-  runDom container (return ()) $$ hello
+  mb <- spawnIO  (ExampleMailbox "Name")
+  myExample <- (recvIO . fst)  mb
+  runDom container (return ()) $$ hello mb 
