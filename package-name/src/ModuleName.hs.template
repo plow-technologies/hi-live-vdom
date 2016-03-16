@@ -23,6 +23,6 @@ hello mb = [valentine|
          $${textBoxWith (\str -> sendMessage (snd mb) (ExampleMailbox str) ) [] Nothing}
      <h1>
          Hello
-         #{fmap getName (fst mb) }
+          #{fmap getName (fst mb) }
 
 |]
