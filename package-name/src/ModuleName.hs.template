@@ -15,7 +15,7 @@ data ExampleMailbox = ExampleMailbox {
 
 
 hello :: STMMailbox ExampleMailbox -> LiveVDom
-hello = [valentine|
+hello mb = [valentine|
 <div>
   <section id="hello-app">
     <header id="header">
