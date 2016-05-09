@@ -119,7 +119,7 @@ gitAddOneTime fp gitPath sandboxAdd = do
          gitUpdateCmd
          sandboxAdd
        else do
-         putNormal $ fp ++ " does not exist"
+         putNormal (fp ++ " does not exist")
          gitAddCmd
          sandboxAdd
   where
