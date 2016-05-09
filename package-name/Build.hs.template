@@ -12,6 +12,8 @@ import           Development.Shake.Util
 buildDir = "_build"
 
 
+
+
 -- main build
 main :: IO () -- , shakeVerbosity=Diagnostic
 main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
@@ -19,13 +21,12 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
    -- Build Target files and directories
    execute = wants >> rules
    wants = want ([packageExecutableFile
-                , sandbox ] ++ (fmap (buildDir </>)  subModules))
+                , sandbox ] ++ (fmap nameSubmodule  subModules))
    subModules = [stmNotify
                , valentine
                , ffiQQ
                , ghcjsVdom
                , liveVdom]
-
    ghcjsServantClient = "ghcjs-servant-client"
    stmNotify = "stm-notify"
    ffiQQ = "ghcjs-ffiqq"
@@ -44,41 +45,41 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
             ffiQQRule <>
             ghcjsVdomRule <>
             cleanarg
-   ghcjsServantClientRule = buildDir </> ghcjsServantClient %> \out -> do
+   ghcjsServantClientRule = nameSubmodule ghcjsServantClient %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> ghcjsServantClient) gitAdd sandboxAdd
+     gitAddOneTime (buildDir </> ghcjsServantClient) gitPath sandboxAdd
              where
-               gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/ghcjs-servant-client.git"
+               gitPath = "https://github.com/plow-technologies/ghcjs-servant-client.git"
                sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsServantClient]
-   stmNotifyRule = (buildDir </> stmNotify) %> \out -> do
+   stmNotifyRule = (nameSubmodule stmNotify) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> stmNotify) gitAdd sandboxAdd
+     gitAddOneTime (buildDir </> stmNotify) gitPath sandboxAdd
        where
-         gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/stm-notify"
+         gitPath = "https://github.com/plow-technologies/stm-notify"
          sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> stmNotify]
-   valentineRule = (buildDir </> valentine) %> \out -> do
+   valentineRule = (nameSubmodule valentine) %> \out -> do
      need [sandbox]     
-     gitAddOneTime (buildDir </> valentine) gitAdd sandboxAdd
+     gitAddOneTime (buildDir </> valentine) gitPath sandboxAdd
        where
-         gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/valentine"
+         gitPath = "https://github.com/plow-technologies/valentine"
          sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> valentine]
-   liveVdomRule = (buildDir </> liveVdom) %> \out -> do
+   liveVdomRule = (nameSubmodule liveVdom) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> liveVdom) gitAdd sandboxAdd
+     gitAddOneTime (buildDir </> liveVdom) gitPath sandboxAdd
        where
-        gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/live-vdom"
+        gitPath = "https://github.com/plow-technologies/live-vdom"
         sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> liveVdom]
-   ffiQQRule = (buildDir </> ffiQQ) %> \out -> do
+   ffiQQRule = (nameSubmodule ffiQQ) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> ffiQQ) gitAdd sandboxAdd
+     gitAddOneTime (buildDir </> ffiQQ) gitPath sandboxAdd
        where
-         gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/ghcjs/ghcjs-ffiqq.git"
+         gitPath = "https://github.com/ghcjs/ghcjs-ffiqq.git"
          sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ffiQQ]
-   ghcjsVdomRule = (buildDir </> ghcjsVdom) %> \out -> do
+   ghcjsVdomRule = (nameSubmodule ghcjsVdom) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> ghcjsVdom) gitAdd sandboxAdd
+     gitAddOneTime (buildDir </> ghcjsVdom) gitPath sandboxAdd
          where
-           gitAdd = cmd Shell (Cwd buildDir) "git submodule add https://github.com/plow-technologies/ghcjs-vdom.git"
+           gitPath = "https://github.com/plow-technologies/ghcjs-vdom.git"
            sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsVdom]
    packageExecutableFileRule = packageExecutableFile %> \out -> do
         need [sandbox
@@ -108,11 +109,28 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
        return ()
 
 
-gitAddOneTime :: FilePath -> Action ()  -> Action ()  -> Action ()
-gitAddOneTime fp gitAdd sandboxAdd = do
-    rslt <- (doesDirectoryExist fp) 
+-- | fp is the local file path of the git repo, gitpath is the remote (https://...) path
+gitAddOneTime :: FilePath -> FilePath  -> Action ()  -> Action ()
+gitAddOneTime fp gitPath sandboxAdd = do
+    rslt <- (doesDirectoryExist fp)
     if rslt
-       then sandboxAdd
+       then do
+         putNormal $ fp ++ " exists"
+         gitInitCmd
+         gitUpdateCmd
+         sandboxAdd
        else do
-    () <- gitAdd
-    sandboxAdd
+         putNormal $ fp ++ " does not exist"
+         gitAddCmd
+         sandboxAdd
+  where
+     gitAddCmd :: Action ()
+     gitAddCmd = command [(Cwd buildDir)] "git" ["submodule","add",gitPath]
+     gitInitCmd = command_ [] "git" ["submodule","init" ]
+     gitUpdateCmd = command_ [] "git" ["submodule","update" ]
+
+
+
+-- | Name a submodule with the build dir and the submodule hidden file (.git)
+
+nameSubmodule mod =  buildDir </> mod </> ".git"
