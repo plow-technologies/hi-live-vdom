@@ -121,11 +121,11 @@ gitAddOneTime fp gitPath  = do
     rslt <- doesFileExist (fp </> ".git" )
     if rslt
        then do
-         putNormal $ fp ++ " exists"
+         putNormal  (fp ++ " exists")
          gitInitSubCmd
          gitUpdateSubCmd
        else do
-         putNormal $ fp ++ "/.git " ++ " does not exist"
+         putNormal (fp ++ "/.git " ++ " does not exist")
          dirExists <- doesDirectoryExist fp         
          if dirExists
             then removeDirectory >> gitAddSubCmd >> gitInitSubCmd >> gitUpdateSubCmd
