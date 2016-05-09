@@ -111,6 +111,8 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
 -- | fp is the local file path of the git repo, gitpath is the remote (https://...) path
 gitAddOneTime :: FilePath -> FilePath  -> Action ()  -> Action ()
 gitAddOneTime fp gitPath sandboxAdd = do
+    gitInitCmd
+    gitUpdateCmd
     rslt <- (doesDirectoryExist fp)
     if rslt
        then do
