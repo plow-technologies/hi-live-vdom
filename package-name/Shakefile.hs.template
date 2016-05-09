@@ -46,37 +46,43 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
             cleanarg
    ghcjsServantClientRule = nameSubmodule ghcjsServantClient %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> ghcjsServantClient) gitPath sandboxAdd
-             where
-               gitPath = "https://github.com/plow-technologies/ghcjs-servant-client.git"
-               sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsServantClient]
+     gitAddOneTime (buildDir </> ghcjsServantClient) gitPath 
+     sandboxAdd
+          where
+            gitPath = "https://github.com/plow-technologies/ghcjs-servant-client.git"
+            sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsServantClient]
    stmNotifyRule = (nameSubmodule stmNotify) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> stmNotify) gitPath sandboxAdd
+     gitAddOneTime (buildDir </> stmNotify) gitPath 
+     sandboxAdd
        where
          gitPath = "https://github.com/plow-technologies/stm-notify"
          sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> stmNotify]
    valentineRule = (nameSubmodule valentine) %> \out -> do
      need [sandbox]     
-     gitAddOneTime (buildDir </> valentine) gitPath sandboxAdd
+     gitAddOneTime (buildDir </> valentine) gitPath 
+     sandboxAdd
        where
          gitPath = "https://github.com/plow-technologies/valentine"
          sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> valentine]
    liveVdomRule = (nameSubmodule liveVdom) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> liveVdom) gitPath sandboxAdd
+     gitAddOneTime (buildDir </> liveVdom) gitPath 
+     sandboxAdd
        where
         gitPath = "https://github.com/plow-technologies/live-vdom"
         sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> liveVdom]
    ffiQQRule = (nameSubmodule ffiQQ) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> ffiQQ) gitPath sandboxAdd
+     gitAddOneTime (buildDir </> ffiQQ) gitPath 
+     sandboxAdd
        where
          gitPath = "https://github.com/ghcjs/ghcjs-ffiqq.git"
          sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ffiQQ]
    ghcjsVdomRule = (nameSubmodule ghcjsVdom) %> \out -> do
      need [sandbox]
-     gitAddOneTime (buildDir </> ghcjsVdom) gitPath sandboxAdd
+     gitAddOneTime (buildDir </> ghcjsVdom) gitPath 
+     sandboxAdd
          where
            gitPath = "https://github.com/plow-technologies/ghcjs-vdom.git"
            sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsVdom]
@@ -108,27 +114,32 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
        return ()
 
 
+
 -- | fp is the local file path of the git repo, gitpath is the remote (https://...) path
-gitAddOneTime :: FilePath -> FilePath  -> Action ()  -> Action ()
-gitAddOneTime fp gitPath sandboxAdd = do
-    gitInitCmd
-    gitUpdateCmd
-    rslt <- (doesDirectoryExist fp)
+gitAddOneTime :: FilePath  -> FilePath  -> Action ()
+gitAddOneTime fp gitPath  = do
+    rslt <- doesFileExist (fp </> ".git" )
     if rslt
        then do
-         putNormal (fp ++ " exists")
-         gitInitCmd
-         gitUpdateCmd
-         sandboxAdd
+         putNormal $ fp ++ " exists"
+         gitInitSubCmd
+         gitUpdateSubCmd
        else do
-         putNormal (fp ++ " does not exist")
-         gitAddCmd
-         sandboxAdd
+         putNormal $ fp ++ "/.git " ++ " does not exist"
+         dirExists <- doesDirectoryExist fp         
+         if dirExists
+            then removeDirectory >> gitAddSubCmd >> gitInitSubCmd >> gitUpdateSubCmd
+            else do
+              gitAddSubCmd
+              gitInitSubCmd
+              gitUpdateSubCmd
+
   where
-     gitAddCmd :: Action ()
-     gitAddCmd = command [(Cwd buildDir)] "git" ["submodule","add",gitPath]
-     gitInitCmd = command_ [] "git" ["submodule","init" ]
-     gitUpdateCmd = command_ [] "git" ["submodule","update" ]
+     gitAddSubCmd :: Action ()
+     gitAddSubCmd = command [(Cwd buildDir)] "git" ["submodule","add",gitPath]
+     gitInitSubCmd = command_ [] "git" ["submodule","init" ]
+     gitUpdateSubCmd = command_ [] "git" ["submodule","update" , fp]
+     removeDirectory =   command_ [] "rm" ["-rf", fp]
 
 
 
