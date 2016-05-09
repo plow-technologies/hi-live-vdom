@@ -88,12 +88,12 @@ main = (shakeArgs shakeOptions{shakeFiles=buildDir}) execute
            sandboxAdd = cmd "cabal sandbox add-source" [buildDir </> ghcjsVdom]
    packageExecutableFileRule = packageExecutableFile %> \out -> do
         need [sandbox
-             ,buildDir </> ghcjsServantClient
-             ,buildDir </> stmNotify
-             ,buildDir </> valentine
-             ,buildDir </> liveVdom
-             ,buildDir </> ffiQQ
-             ,buildDir </> ghcjsVdom]
+             ,nameSubmodule ghcjsServantClient
+             ,nameSubmodule stmNotify
+             ,nameSubmodule valentine
+             ,nameSubmodule liveVdom
+             ,nameSubmodule ffiQQ
+             ,nameSubmodule ghcjsVdom]
         () <- cmd "cabal update"
         () <- cmd "cabal install --ghcjs --reorder-goals"
         () <- cmd "cabal configure --ghcjs"
