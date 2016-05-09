@@ -114,7 +114,7 @@ gitAddOneTime fp gitPath sandboxAdd = do
     rslt <- (doesDirectoryExist fp)
     if rslt
        then do
-         putNormal $ fp ++ " exists"
+         putNormal (fp ++ " exists")
          gitInitCmd
          gitUpdateCmd
          sandboxAdd
