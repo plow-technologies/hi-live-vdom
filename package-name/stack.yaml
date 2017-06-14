@@ -1,0 +1,59 @@
+resolver: lts-7.8
+compiler: ghcjs-0.2.1.9007008_ghc-8.0.1
+compiler-check: match-exact
+
+setup-info:
+  ghcjs:
+    source:
+      ghcjs-0.2.1.9007008_ghc-8.0.1:
+          url: http://ghcjs.tolysz.org/ghc-8.0-2016-11-07-lts-7.8-9007008.tar.gz
+          sha1: 190300a3725cde44b2a08be9ef829f2077bf8825
+
+packages:
+- '.'
+- location:
+    git: git@github.com:plow-technologies/hmi-types.git
+    commit: fb85a71e2f1a98d0d6cf3ec3d888cd3b32c162b3
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/vdom-ui.git
+    commit: 770510a487b488b519a45e55c92d76682149621b
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/valentine.git
+    commit: 2dd0f8c0bfef4c04db5e79c5b078c34ba0a89a1f
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/stm-notify.git
+    commit: f047ee8c82993e79f7241688748e220affda6a73
+  extra-dep: true
+- location:
+    git: git@github.com:ghcjs/ghcjs-ffiqq.git
+    commit: b52338c2dcd3b0707bc8aff2e171411614d4aedb
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/ghcjs-jsval-combinators.git
+    commit: 46e481dd5b762c785cb5e62b956a19e1e62488f4
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/ghcjs-servant-client.git
+    commit: 333b266fe8818d5bd480b59cb60e5bea73d2036e
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/ghcjs-vdom.git
+    commit: 3bd3c8e6a5ab3306e8b3708c221734accd807255
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/live-vdom.git
+    commit: 64d95ebecdd4091c910c00200d089bdbdfaef63e
+  extra-dep: true
+- location:
+    git: git@github.com:plow-technologies/murica.git
+    commit: c5b88457adacf101d7c40048360ab1d73d3c2460
+  extra-dep: true
+
+extra-deps:
+- aeson-serialize-0.0.0
+- http-api-data-0.3.3
+- servant-0.9.1.1
+- special-keys-0.1.0.3
