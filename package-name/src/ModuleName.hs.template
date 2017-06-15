@@ -27,7 +27,7 @@ import Data.Vinyl
 
 
 hello :: (MailboxName ∈ mailboxes) => Rec Use mailboxes -> Desc Identity ()
-hello mb = [valentine|
+hello recMailboxes = [valentine|
 <div>
   <section id="hello-app">
     <header id="header">
