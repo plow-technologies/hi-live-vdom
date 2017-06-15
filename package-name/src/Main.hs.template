@@ -7,9 +7,7 @@ import           $moduleName
 
 main :: IO ()
 main = do
---  mapM_ addCss cssFiles
---   mapM_ addJs jsFiles
   container <- createContainer
   mb <- spawnIO  (ExampleMailbox "Name")
   myExample <- (recvIO . fst)  mb
-  runDom container (return ()) $$ hello mb 
+  runDom container (return ()) $$ elem' "div" [] [] $$ hello mb 

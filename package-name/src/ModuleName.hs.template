@@ -14,7 +14,8 @@ data ExampleMailbox = ExampleMailbox {
 } deriving (Eq, Show)
 
 
-hello :: STMMailbox ExampleMailbox -> LiveVDom
+
+hello :: STMMailbox ExampleMailbox -> Desc Identity ()
 hello mb = [valentine|
 <div>
   <section id="hello-app">
