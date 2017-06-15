@@ -6,8 +6,4 @@ import           LiveVDom
 import           $moduleName
 
 main :: IO ()
-main = do
-  container <- createContainer
-  mb <- spawnIO  (ExampleMailbox "Name")
-  myExample <- (recvIO . fst)  mb
-  runDom container (return ()) $$ elem' "div" [] [] $$ hello mb 
+main = runMain

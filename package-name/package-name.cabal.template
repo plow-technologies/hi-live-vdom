@@ -26,6 +26,9 @@ Library
                       , lens
                       , ghcjs-vdom
                       , ghcjs-ffiqq
+                      , lens
+                      , vinyl
+                      , singletons
 
 
 executable $packageName
@@ -41,6 +44,9 @@ executable $packageName
                       , containers
                       , live-vdom
                       , ghcjs-ffiqq                     
+                      , lens
+                      , vinyl
+                      , singletons
 
 Test-Suite spec
   Type:                 exitcode-stdio-1.0
@@ -58,7 +64,9 @@ Test-Suite spec
                       , tasty-hunit
                       , tasty-quickcheck
                       , QuickCheck
-                      
+                      , lens
+                      , vinyl
+                      , singletons                      
 
 Source-Repository head
   Type:                 git

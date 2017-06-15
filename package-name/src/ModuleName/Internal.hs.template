@@ -1,3 +1,49 @@
-module ${moduleName}.Internal
-    (
-    ) where
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE StandaloneDeriving #-}
+
+module ${moduleName}.Internal where
+
+import           LiveVDom
+import           Valentine
+import           Data.JSString (JSString)
+
+import Data.Vinyl
+import Data.Vinyl.Functor
+import Control.Applicative
+import Control.Lens hiding (Identity)
+import Control.Lens.TH
+import Data.Char
+import Data.Singletons.TH
+import Data.Maybe
+
+
+data ExampleMailbox = ExampleMailbox {
+    getName :: JSString
+} deriving (Eq, Show)
+
+
+data Mailboxes = MailboxName
+
+
+
+type family AMailbox (f::Mailboxes) :: * where
+  AMailbox MailboxName = STMMailbox ExampleMailbox
+
+
+newtype Use mailbox = Use {_unUse :: AMailbox mailbox}
+
+makeLenses ''Use
+
+genSingletons [''Mailboxes]
+
+(=::) :: sing mailbox -> AMailbox mailbox -> Use mailbox
+_ =:: mailbox = Use mailbox
