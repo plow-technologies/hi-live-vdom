@@ -23,9 +23,6 @@ import           Data.JSString (JSString)
 import Control.Lens hiding (Identity)
 import Data.Vinyl
 
-data ExampleMailbox = ExampleMailbox {
-    getName :: JSString
-} deriving (Eq, Show)
 
 
 
